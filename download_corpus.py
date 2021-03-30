@@ -67,12 +67,19 @@ def tokenize_with_spacy(input_files, output_fn, language):
     print("Tokenize data with spacy")
     nlp = SPACY_MODELS[language]
 
-    total_size = sum(1 for _ in chain.from_iterable([open(fn) for fn in input_files]))
+    total_size = sum(1 for _ in chain.from_iterable([open(fn, "rb") for fn in input_files]))
 
     with open(output_fn, "w") as ofile:
         for line in tqdm(
-            chain.from_iterable(open(fn) for fn in input_files), total=total_size
+            chain.from_iterable(open(fn, "rb") for fn in input_files), total=total_size
         ):
+            # Be carefull: we have to open the file in binary
+            # otherwise python will take the \r that can appear within
+            # a sentence as a newline breaking the parallel corpus
+            # (this is for instance the case in the newscommentary
+            # corpus)
+            line = line.decode("utf-8")
+            line = line.replace("\r", "")
             tokenized_sentence = [
                 token.text.strip() for token in nlp(line, disable=["parser", "ner"])
             ]
