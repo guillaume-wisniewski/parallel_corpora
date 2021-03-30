@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 from pathlib import Path
 from itertools import chain
 
+import requests
 import spacy
 
 from tqdm import tqdm
@@ -24,9 +25,16 @@ def lazzy_download(uri, filename=None):
 
     context = ssl._create_unverified_context()
     if not filename.is_file():
-        with Halo(f"Downloading {filename}"):
-            with urlopen(uri, context=context) as response:
-                shutil.copyfileobj(response, open(filename, "wb"))
+        resp = requests.get(uri, stream=True)
+        total = int(resp.headers.get('content-length', 0))
+
+        with open(filename, 'wb') as file, tqdm(total=total,
+                                                unit='iB',
+                                                unit_scale=True,
+                                                unit_divisor=1024) as bar:
+            for data in resp.iter_content(chunk_size=1024):
+                size = file.write(data)
+                bar.update(size)
 
     return filename
 
@@ -62,33 +70,6 @@ def tokenize_with_spacy(input_files, output_fn, language):
 
     with open(output_fn, "w") as ofile:
         for line in tqdm(chain.from_iterable(open(fn) for fn in input_files), total=total_size):
-            tokenized_sentence = [token.text.strip() for token in nlp(line, parser=False, tagger=False, entity=False)]
+            tokenized_sentence = [token.text.strip() for token in nlp(line, disable=['parser', 'ner'])]
             ofile.write(" ".join(tokenized_sentence))
             ofile.write("\n")
-
-
-raw_data = create_directory("raw_data")
-download_dir = create_directory("raw_data/downloads")
-working_dir = create_directory("tmp")
-
-newsco = lazzy_download("https://www.statmt.org/wmt15/training-parallel-nc-v10.tgz",
-                        download_dir / "training-parallel-nc-v10.tgz")
-common_crawl = lazzy_download("https://www.statmt.org/wmt13/training-parallel-commoncrawl.tgz",
-                              download_dir / "training-parallel-commoncrawl.tgz")
-europarl = lazzy_download("https://www.statmt.org/europarl/v7/fr-en.tgz",
-                          download_dir / "fr-en.tgz")
-
-fr_corpora = [
-    extract_corpus(newsco, "news-commentary-v10.fr-en.fr", raw_data),
-    extract_corpus(europarl, "europarl-v7.fr-en.fr", raw_data),
-    extract_corpus(common_crawl, "commoncrawl.fr-en.fr", raw_data),
-]
-
-en_corpora = [
-    extract_corpus(newsco, "news-commentary-v10.fr-en.en", raw_data),
-    extract_corpus(europarl, "europarl-v7.fr-en.en", raw_data),
-    extract_corpus(common_crawl, "commoncrawl.fr-en.en", raw_data),
-]
-              
-#tokenize_with_spacy(fr_corpora, working_dir / "wmt15.tokenized.fra", "fra")
-tokenize_with_spacy(en_corpora, working_dir / "wmt15.tokenized.eng", "eng")
