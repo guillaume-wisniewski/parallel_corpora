@@ -37,7 +37,7 @@ for idx, (src, tgt) in enumerate(zip_longest(args.src, args.tgt)):
 
     src = src.decode("utf-8")
     tgt = tgt.decode("utf-8")
-    
+
     if args.max_sentence is not None and idx >= args.max_sentence:
         break
 
@@ -57,21 +57,35 @@ for idx, (src, tgt) in enumerate(zip_longest(args.src, args.tgt)):
         stat["contains_control_char"] += 1
         continue
 
-    if args.max_sent_length is not None and (len(src.split()) > args.max_sent_length or len(tgt.split()) > args.max_sent_length):
+    if args.max_sent_length is not None and (
+        len(src.split()) > args.max_sent_length
+        or len(tgt.split()) > args.max_sent_length
+    ):
         stat["too_long"] += 1
         continue
-    
+
     src_counts = Counter(script_cat(ch)[0] for ch in src)
     tgt_counts = Counter(script_cat(ch)[0] for ch in tgt)
-    
-    if sum(src_counts[w] for w in ("Inherited", "Common", "Latin")) - src.count("<") - src.count(">") < .9 * len(src) or \
-       sum(tgt_counts[w] for w in ("Inherited", "Common", "Latin")) - src.count("<") - src.count(">") < .9 * len(tgt) or \
-       tgt_counts["Latin"] < len(tgt) / 2 or\
-       src_counts["Latin"] < len(src) / 2:
+
+    if (
+        sum(src_counts[w] for w in ("Inherited", "Common", "Latin"))
+        - src.count("<")
+        - src.count(">")
+        < 0.9 * len(src)
+        or sum(tgt_counts[w] for w in ("Inherited", "Common", "Latin"))
+        - src.count("<")
+        - src.count(">")
+        < 0.9 * len(tgt)
+        or tgt_counts["Latin"] < len(tgt) / 2
+        or src_counts["Latin"] < len(src) / 2
+    ):
         stat["not_enough_latin"] += 1
         continue
 
-    if args.filter_lang and ( langid.classify(src)[0] != args.src_lang or langid.classify(tgt)[0] != args.tgt_lang):
+    if args.filter_lang and (
+        langid.classify(src)[0] != args.src_lang
+        or langid.classify(tgt)[0] != args.tgt_lang
+    ):
         stat["wrong_lang"] += 1
         continue
 
@@ -81,6 +95,5 @@ for idx, (src, tgt) in enumerate(zip_longest(args.src, args.tgt)):
 
     if idx % 10_000 == 0:
         print(f"{idx:,}")
-    
-pprint(stat)
 
+pprint(stat)

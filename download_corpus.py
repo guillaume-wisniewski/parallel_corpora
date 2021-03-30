@@ -14,8 +14,10 @@ from tqdm import tqdm
 from halo import Halo
 
 
-SPACY_MODELS = {"fra": spacy.load("fr_core_news_sm"),
-                "eng": spacy.load("en_core_web_sm")}
+SPACY_MODELS = {
+    "fra": spacy.load("fr_core_news_sm"),
+    "eng": spacy.load("en_core_web_sm"),
+}
 
 
 def lazzy_download(uri, filename=None):
@@ -26,12 +28,11 @@ def lazzy_download(uri, filename=None):
     context = ssl._create_unverified_context()
     if not filename.is_file():
         resp = requests.get(uri, stream=True)
-        total = int(resp.headers.get('content-length', 0))
+        total = int(resp.headers.get("content-length", 0))
 
-        with open(filename, 'wb') as file, tqdm(total=total,
-                                                unit='iB',
-                                                unit_scale=True,
-                                                unit_divisor=1024) as bar:
+        with open(filename, "wb") as file, tqdm(
+            total=total, unit="iB", unit_scale=True, unit_divisor=1024
+        ) as bar:
             for data in resp.iter_content(chunk_size=1024):
                 size = file.write(data)
                 bar.update(size)
@@ -52,8 +53,8 @@ def extract_corpus(archive, original_filename, target_directory):
     if target_filename.is_file():
         print(f"skip, {target_filename} already exists")
         return target_filename
-    
-    with Halo(text=f'Extracting {original_filename}', spinner='dots'):
+
+    with Halo(text=f"Extracting {original_filename}", spinner="dots"):
         with tarfile.open(archive, "r") as ifile:
             original_filename = ifile.getmember(original_filename)
             ifile.extractall(target_directory, [original_filename])
@@ -69,7 +70,11 @@ def tokenize_with_spacy(input_files, output_fn, language):
     total_size = sum(1 for _ in chain.from_iterable([open(fn) for fn in input_files]))
 
     with open(output_fn, "w") as ofile:
-        for line in tqdm(chain.from_iterable(open(fn) for fn in input_files), total=total_size):
-            tokenized_sentence = [token.text.strip() for token in nlp(line, disable=['parser', 'ner'])]
+        for line in tqdm(
+            chain.from_iterable(open(fn) for fn in input_files), total=total_size
+        ):
+            tokenized_sentence = [
+                token.text.strip() for token in nlp(line, disable=["parser", "ner"])
+            ]
             ofile.write(" ".join(tokenized_sentence))
             ofile.write("\n")
