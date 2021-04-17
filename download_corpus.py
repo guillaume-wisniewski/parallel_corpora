@@ -86,7 +86,9 @@ def tokenize_with_spacy(input_files, output_fn, language):
             ofile.write(" ".join(tokenized_sentence))
             ofile.write("\n")
 
+    return output_fn
 
+            
 def bpe_tokenize(train_fn, vocab_size, model_prefix, tokenized_dir, files_to_tokenize):
 
     model_prefix = Path(model_prefix)
