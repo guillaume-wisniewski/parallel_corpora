@@ -85,3 +85,12 @@ def tokenize_with_spacy(input_files, output_fn, language):
             ]
             ofile.write(" ".join(tokenized_sentence))
             ofile.write("\n")
+
+
+def tokenize_with_bpe():
+
+    import sentencepiece as spm
+
+    spm.SentencePieceTrainer.train("tmp/wmt15.tokenized.eng",
+                                   model_prefix="m_",
+                                   vocab_size=1000)
