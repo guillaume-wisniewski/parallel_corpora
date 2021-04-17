@@ -21,6 +21,7 @@ preshed==3.0.5
 pydantic==1.7.3
 pyparsing==2.4.7
 requests==2.25.1
+sentencepiece==0.1.95
 six==1.15.0
 smart-open==3.0.0
 spacy==3.0.5

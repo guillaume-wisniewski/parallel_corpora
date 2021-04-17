@@ -87,10 +87,35 @@ def tokenize_with_spacy(input_files, output_fn, language):
             ofile.write("\n")
 
 
-def tokenize_with_bpe():
+def bpe_tokenize(train_fn, vocab_size, model_prefix, tokenized_dir, files_to_tokenize):
 
-    import sentencepiece as spm
+    model_prefix = Path(model_prefix)
+    model_file = model_prefix.with_suffix(".model")
+    model_directory = model_prefix.parent
+    tokenized_dir = Path(tokenized_dir)
 
-    spm.SentencePieceTrainer.train("tmp/wmt15.tokenized.eng",
-                                   model_prefix="m_",
-                                   vocab_size=1000)
+    tokenized_dir = create_directory(tokenized_dir)
+    model_directory = create_directory(model_directory)
+
+    if not model_file.is_file():
+        spm.SentencePieceTrainer.train(input=train_fn,
+                                       model_prefix=model_prefix,
+                                       vocab_size=vocab_size)
+
+    sp = spm.SentencePieceProcessor(model_file=f"{model_prefix}.model")
+
+    files_to_tokenize = [Path(f) for f in files_to_tokenize]
+    
+    for filename in files_to_tokenize:
+
+        output_filename = tokenized_dir / f"{filename.stem}.bpe{filename.suffix}"
+        size = sum(1 for _ in open(filename))
+        
+        if output_filename.is_file():
+            print(f"do not tokenize {output_filename} has it already exists")
+            continue
+        
+        with open(output_filename, "wt") as ofile:
+            for line in tqdm(open(filename), total=size):
+                ofile.write(" ".join(sp.encode(line, out_type=str)))
+                ofile.write("\n")
