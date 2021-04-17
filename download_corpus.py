@@ -10,6 +10,8 @@ from itertools import chain
 import requests
 import spacy
 
+import sentencepiece as spm
+
 from tqdm import tqdm
 from halo import Halo
 
@@ -46,22 +48,41 @@ def create_directory(directory_name):
     return directory_name
 
 
-def extract_corpus(archive, original_filename, target_directory):
+def extract_corpus(archive, original_filename, target_filename):
+    """
+    Extract lazzily a file from an archive.
+
+    For the moment, can only be applied to tar archives.
+    """
     print(f"Extracting {original_filename}")
 
-    target_filename = target_directory / original_filename
+    target_filename = Path(target_filename)
     if target_filename.is_file():
         print(f"skip, {target_filename} already exists")
         return target_filename
 
     with Halo(text=f"Extracting {original_filename}", spinner="dots"):
         with tarfile.open(archive, "r") as ifile:
-            original_filename = ifile.getmember(original_filename)
-            ifile.extractall(target_directory, [original_filename])
+            original_file = ifile.getmember(original_filename)
+            ifile.extractall(members=[original_file])
 
+            original_filename = Path(original_filename)
+            original_filename.rename(target_filename)
+    
     return target_filename
 
 
+def sgm2txt(input_filename, output_filename):
+
+    with open(output_filename, "wt") as ofile:
+        for line in open(input_filename):
+            if "<seg" in line:
+                ofile.write(line.split(">")[1].split("<")[0])
+                ofile.write("\n")
+
+    return output_filename
+
+            
 def tokenize_with_spacy(input_files, output_fn, language):
 
     print("Tokenize data with spacy")
