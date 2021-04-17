@@ -34,10 +34,12 @@ bpe_tokenize(train_fn=fra_train_set,
              files_to_tokenize=[fra_train_set],
              tokenized_dir="wmt15/data",
              vocab_size=32_000,
-             model_prefix="wmt15/model/fra_tokenizer")
+             model_prefix="wmt15/model/fra_tokenizer",
+             to_lower=True)
 
 bpe_tokenize(train_fn=eng_train_set,
              files_to_tokenize=[eng_train_set],
              tokenized_dir="wmt15/data",
              vocab_size=32_000,
-             model_prefix="wmt15/model/eng_tokenizer")
+             model_prefix="wmt15/model/eng_tokenizer",
+             to_lower=True)

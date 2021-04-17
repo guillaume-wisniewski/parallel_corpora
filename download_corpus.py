@@ -89,7 +89,7 @@ def tokenize_with_spacy(input_files, output_fn, language):
     return output_fn
 
             
-def bpe_tokenize(train_fn, vocab_size, model_prefix, tokenized_dir, files_to_tokenize):
+def bpe_tokenize(train_fn, vocab_size, model_prefix, tokenized_dir, files_to_tokenize, to_lower=False):
 
     model_prefix = Path(model_prefix)
     model_file = model_prefix.with_suffix(".model")
@@ -119,5 +119,7 @@ def bpe_tokenize(train_fn, vocab_size, model_prefix, tokenized_dir, files_to_tok
         
         with open(output_filename, "wt") as ofile:
             for line in tqdm(open(filename), total=size):
+                if to_lower:
+                    line = line.lower()
                 ofile.write(" ".join(sp.encode(line, out_type=str)))
                 ofile.write("\n")
