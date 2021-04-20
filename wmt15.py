@@ -2,7 +2,7 @@
 Prepare corpora for training a en-fr system on WMT'15 data.
 """
 
-from download_corpus import create_directory, lazzy_download, extract_corpus, tokenize_with_spacy, sgm2txt, bpe_tokenize
+from download_corpus import create_directory, lazzy_download, extract_corpus, tokenize_with_spacy, sgm2txt, bpe_tokenize, merge_files
 
 raw_data = create_directory("raw_data")
 download_dir = create_directory("raw_data/downloads")
@@ -39,8 +39,12 @@ fra_test = sgm2txt(fra_test, working_dir / "test.fra")
 eng_dev = extract_corpus(devsets, "dev/newstest2013.en", working_dir / "dev.eng")
 fra_dev = extract_corpus(devsets, "dev/newstest2013.fr", working_dir / "dev.fra")
 
-# fra_train_set = tokenize_with_spacy(fr_training_corpora, working_dir / "wmt15.tokenized.fra", "fra")
-# eng_train_set = tokenize_with_spacy(en_training_corpora, working_dir / "wmt15.tokenized.eng", "eng")
+#fra_train_set = tokenize_with_spacy(fr_training_corpora, working_dir / "wmt15.tokenized.fra", "fra")
+#eng_train_set = tokenize_with_spacy(en_training_corpora, working_dir / "wmt15.tokenized.eng", "eng")
+
+fra_train_set = merge_files(fr_training_corpora, working_dir / "wmt15.tokenized.fra")
+eng_train_set = merge_files(en_training_corpora, working_dir / "wmt15.tokenized.eng")
+
 
 bpe_tokenize(train_fn=fra_train_set,
              files_to_tokenize=[fra_train_set, fra_dev, fra_test],
