@@ -103,6 +103,15 @@ def merge_files(input_files, output_fn):
     return output_fn
 
 
+def safe_open(filename):
+    # Be carefull: we have to open the file in binary
+    # otherwise python will take the \r that can appear within
+    # a sentence as a newline breaking the parallel corpus
+    # (this is for instance the case in the newscommentary
+    # corpus)
+    return (line.decode("utf-8").replace("\r", "") for line in open(filename, "rb"))
+
+
 def tokenize_with_spacy(input_files, output_fn, language):
 
     print("Tokenize data with spacy")
@@ -164,3 +173,17 @@ def bpe_tokenize(train_fn, vocab_size, model_prefix, tokenized_dir, files_to_tok
                     line = line.lower()
                 ofile.write(" ".join(sp.encode(line, out_type=str)))
                 ofile.write("\n")
+
+
+def check_files(first, second):
+
+    if type(first) != list:
+        first = [first]
+
+    if type(second) != list:
+        second = [second]
+        
+    line_number_first = sum(1 for _ in chain.from_iterable([safe_open(f) for f in first]))
+    line_number_second = sum(1 for _ in chain.from_iterable([safe_open(s) for s in second]))
+
+    return line_number_second == line_number_first
