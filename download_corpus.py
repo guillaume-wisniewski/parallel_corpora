@@ -1,3 +1,4 @@
+import html
 import tarfile
 import ssl
 import shutil
@@ -77,7 +78,14 @@ def sgm2txt(input_filename, output_filename):
     with open(output_filename, "wt") as ofile:
         for line in open(input_filename):
             if "<seg" in line:
-                ofile.write(line.split(">")[1].split("<")[0])
+                line = line.split(">")[1].split("<")[0]
+                if "&" in line:
+                    # we have to unescape the line twice because entities
+                    # are encoded as:  &amp;gt;
+                    line = html.unescape(line)
+                    line = html.unescape(line)
+
+                ofile.write(line.strip())
                 ofile.write("\n")
 
     return output_filename
